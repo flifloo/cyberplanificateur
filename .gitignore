@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Atom SFTP config files
+.ftp*
+
+# Credentials files
+twitter_credentials.py
