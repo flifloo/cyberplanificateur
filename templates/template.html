@@ -28,10 +28,10 @@
 										<ul>
 											<li><a href="{{ url_for('home') }}">Home</a></li>
                       {% if login %}
-                      <li><a href="#">?</a></li>
-                      <li><a href="{{ url_for('t_logout')}}">Log Out</a></li>
+                      <li><a href="{{ url_for('settings')}}">Settings</a></li>
+                      <li><a href="{{ url_for('twlogout')}}">Log Out</a></li>
                       {% else %}
-											<li><a href="{{ url_for('t_login')}}">Log In</a></li>
+											<li><a href="{{ url_for('twlogin')}}">Log In</a></li>
                       {% endif %}
 										</ul>
 									</div>
