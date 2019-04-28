@@ -1,5 +1,5 @@
 from flask import Flask, request, redirect, session, render_template
-import twitter_credentials, tweepy, database
+import twitter_credentials, tweepy, database, trello_credentials, trello
 
 app = Flask(__name__)
 app.secret_key = "*i9uld6u@t!kxl9%o+byxqf14&a&&@y@q=l$!lg4m%b-a*^o(a"
@@ -47,13 +47,6 @@ def twlogout():
         session.pop("access_secret_token", None)
     return redirect("/")
 
-@app.route("/trlogin")
-def trlogin():
-    if not is_twlogin(session):
-        return redirect("/")
-    if request.args.get("token"):
-        database.tradd(twapi_login(session).me().id, request.args.get("token"))
-    return redirect("/settings")
 
 @app.route("/trlogout")
 def trlogout():
@@ -71,11 +64,16 @@ def home():
 def settings():
     if not is_twlogin(session):
         return redirect("/")
-    api = twapi_login(session)
-    if "token" in request.form:
-        database.tradd(api.me().id, request.form["token"])
-        return redirect("/settings")
-    return render_template("settings.html", login = True, trlogin = is_trlogin(session))
+
+    trloginfail = False
+    if "trtoken" in request.form:
+        try:
+            trello.TrelloClient(api_key = trello_credentials.api_key, token = request.form["trtoken"]).list_boards()
+        except:
+            trloginfail = True
+        else:
+            database.tradd(twapi_login(session).me().id, request.form["trtoken"])
+    return render_template("settings.html", login = True, trlogin = is_trlogin(session), trloginfail = trloginfail)
 
 @app.route("/twpost")
 def twpost():

@@ -11,6 +11,9 @@
 							<div class="inner">
 
 								<h3>Connexions</h3>
+								{% if trloginfail and not trlogin %}
+								<h4><font color="red">Invalid Trello token !</font></h4>
+								{% endif %}
 								<p>Trello :
 								{% if trlogin %}
 								<font color="green">Connected</font></p>
@@ -19,7 +22,7 @@
 								<font color="red">Disconnected</font></p>
 								<p><a href="https://trello.com/1/authorize?expiration=never&name=Cyberplanificateur&scope=read,write&response_type=token&key=4b9aa97a8ec693574d819aeaf9e0eefa&return_url=https://cyberplanificateur.flifloo.fr/settings">Click here</a> and give the token bellow</p>
 								<form action = "https://cyberplanificateur.flifloo.fr/settings" method = "POST">
-									<input type="text" name="token" placeholder="Trello token" />
+									<input type="text" name="trtoken" placeholder="Trello token" />
 									<input type="submit" value="Connect" class="button primary">
 								</form>
 								{% endif %}

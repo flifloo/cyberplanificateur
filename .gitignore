@@ -108,3 +108,7 @@ venv.bak/
 
 # Credentials files
 twitter_credentials.py
+trello_credentials.py
+
+# Database
+database.db
