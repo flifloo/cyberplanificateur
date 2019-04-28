@@ -75,6 +75,13 @@ def settings():
             database.tradd(twapi_login(session).me().id, request.form["trtoken"])
     return render_template("settings.html", login = True, trlogin = is_trlogin(session), trloginfail = trloginfail)
 
+@app.route("/dashboard")
+def dashboard():
+    if not is_twlogin(session):
+        return redirect("/")
+
+    return render_template("dashboard.html", login = True, tweets = ["test1", "test2", "test3"], timeline = [{"id": 1, "text": "test1"}, {"id": 2, "text": "test2"}, {"id": 3, "text": "test3"}, {"id": 4, "text": "test4"}])
+
 @app.route("/twpost")
 def twpost():
     if is_twlogin(session):

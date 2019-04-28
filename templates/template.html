@@ -28,6 +28,7 @@
 										<ul>
 											<li><a href="{{ url_for('home') }}">Home</a></li>
                       {% if login %}
+                      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
                       <li><a href="{{ url_for('settings')}}">Settings</a></li>
                       <li><a href="{{ url_for('twlogout')}}">Log Out</a></li>
                       {% else %}
