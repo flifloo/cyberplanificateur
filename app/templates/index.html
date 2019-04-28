@@ -7,10 +7,10 @@
 			<h2>Cyberplanificateur</h2>
 			<p>Manage your commissions was never so easy with with the Cyberplanificateur</p>
 			<ul class="actions special">
-				{% if login %}
+				{% if current_user.is_authenticated %}
 				<li><a href="{{ url_for('dashboard') }}" class="button primary">Dashboard</a></li>
 				{% else %}
-				<li><a href="{{ url_for('twlogin') }}" class="button primary">Login !</a></li>
+				<li><a href="{{ url_for('login') }}" class="button primary">Login !</a></li>
 				{% endif %}
 			</ul>
 		</div>

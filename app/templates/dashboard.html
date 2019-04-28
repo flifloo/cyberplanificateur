@@ -1,0 +1,96 @@
+{% extends "template.html" %}
+{% block content %}
+
+<!-- Main -->
+	<article id="main">
+		<header>
+			<h2>Dashboard</h2>
+			<p>Your personal dashboard</p>
+		</header>
+		<section class="wrapper style5">
+			<div class="inner">
+
+				<h3>Current automatized tweets</h3>
+        <hr />
+          <table>
+						<thead>
+							<tr>
+								<th class="align-center">Tweet</th>
+								<th class="align-center">Slots</th>
+								<th class="align-center">Keywords</th>
+								<th class="align-center">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for t in tweets %}
+	            <tr>
+	              <td><blockquote>{{ t['text'] }}</blockquote></td>
+								<td class="align-center">{{ t['slots'] }}</td>
+								<td class="align-center">{{ t['keywords'] }}</td>
+	              <td class="align-right"><a href="https://cyberplanificateur.flifloo.fr/dashboard?twrm={{ t['id']}}" class="button primary">Disable</a>
+	              <a href="https://cyberplanificateur.flifloo.fr/dashboard?twrm={{ t['id']}}&delet=True" class="button">Delet</a></td>
+	            </tr>
+	            {% endfor %}
+						</tbody>
+          </table>
+        <hr />
+
+        <h3>Add an automatized tweet</h3>
+        <hr />
+				<form action = "https://cyberplanificateur.flifloo.fr/dashboard" method = "POST">
+	        <section>
+	          <div class="row">
+	            <div class="col-6 col-12-medium">
+	              {% for t in timeline %}
+	              <div class="col-4 col-12-small">
+	                <input type="radio" id="{{ t['id'] }}" name="tweet" value="{{ t['id'] }}">
+	                <label for="{{ t['id'] }}">{{ t['text'] }}</label>
+	              </div>
+	              {% endfor %}
+	            </div>
+	            <div class="col-6 col-12-medium">
+	              <input type="text" name="slots" placeholder="Slots number" />
+	              <input type="text" name="keywords" placeholder="Keywords (separate with a comma)" />
+	            </div>
+	          </div>
+	        </section>
+	        <input type="submit" value="Connect" class="button primary">
+				</form>
+        <hr />
+
+        <h3>Trello board</h3>
+        <hr />
+        <section>
+          <div class="row">
+            <div class="col-6 col-12-medium">
+              <h4>Choose a board</h4>
+							<form action="https://cyberplanificateur.flifloo.fr/dashboard" method="POST">
+								{% for b in boards %}
+								<div class="col-4 col-12-small">
+									<input type="radio" id="{{ b['id'] }}" name="board" value="{{ b['id'] }}">
+									<label for="{{ b['id'] }}">{{ b['text'] }}</label>
+								</div>
+								{% endfor %}
+								<input type="submit" value="Select" class="button primary">
+							</form>
+            </div>
+            <div class="col-6 col-12-medium">
+              <h4>Choose a column</h4>
+							<form action="https://cyberplanificateur.flifloo.fr/dashboard" method="POST">
+								{% for c in columns %}
+								<div class="col-4 col-12-small">
+									<input type="radio" id="{{ c['id'] }}" name="column" value="{{ c['id'] }}">
+									<label for="{{ c['id'] }}">{{ c['text'] }}</label>
+								</div>
+								{% endfor %}
+								<input type="submit" value="Select" class="button primary">
+							</form>
+            </div>
+          </div>
+        </section>
+        <hr />
+			</div>
+		</section>
+	</article>
+
+{% endblock %}

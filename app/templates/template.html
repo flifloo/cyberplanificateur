@@ -27,12 +27,12 @@
 									<div id="menu">
 										<ul>
 											<li><a href="{{ url_for('home') }}">Home</a></li>
-                      {% if login %}
+                      {% if current_user.is_authenticated %}
                       <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
                       <li><a href="{{ url_for('settings')}}">Settings</a></li>
-                      <li><a href="{{ url_for('twlogout')}}">Log Out</a></li>
+                      <li><a href="{{ url_for('logout')}}">Log Out</a></li>
                       {% else %}
-											<li><a href="{{ url_for('twlogin')}}">Log In</a></li>
+											<li><a href="{{ url_for('login')}}">Log In</a></li>
                       {% endif %}
 										</ul>
 									</div>
