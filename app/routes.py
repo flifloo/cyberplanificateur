@@ -160,10 +160,6 @@ def dashboard():
 
     return render_template("dashboard.html", timeline = timeline, tweets = tweets, boards = boards, columns = columns)
 
-@app.route("/twtoken")
-def twtoken():
-    return f"{session['access_token']} -- {session['access_secret_token']}"
-
 @app.route("/test")
 def test():
     return render_template("elements.html")
