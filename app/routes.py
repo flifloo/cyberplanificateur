@@ -1,11 +1,10 @@
 from app import app, db
-from flask import Flask, request, redirect, session, render_template, flash, url_for
+from flask import Flask, request, redirect, session, render_template, url_for
 from flask_login import current_user, login_user, logout_user, login_required
-from app.forms import LoginForm, RegistrationForm
-from app.models import User, TwitterAPI, TrelloAPI
+from app.forms import LoginForm, RegistrationForm, TrelloAPIForm
+from app.models import User, TwitterAPI, Tweets, TrelloAPI, Boards
 from werkzeug.urls import url_parse
-import twitter_credentials, tweepy, tw
-import trello_credentials, trello, tr
+import tweepy, trello, twitter_credentials, trello_credentials
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -13,16 +12,13 @@ def login():
         return redirect(url_for("home"))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash("Invalid username or password")
-            return redirect(url_for("login"))
-        login_user(user, remember=form.remember_me.data)
+        user = User.query.filter_by(username = form.username.data).first()
+        login_user(user, remember = form.remember_me.data)
         next_page = request.args.get("next")
         if not next_page or url_parse(next_page).netloc != "":
             next_page = url_for("home")
         return redirect(next_page)
-    return render_template("login.html", form=form)
+    return render_template("login.html", form = form)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -30,11 +26,10 @@ def register():
         return redirect(url_for("index"))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
+        u = User(username=form.username.data, email=form.email.data)
+        u.set_password(form.password.data)
+        db.session.add(u)
         db.session.commit()
-        flash("Congratulations, you are now a registered user!")
         return redirect(url_for("login"))
     return render_template("register.html", form=form)
 
@@ -46,6 +41,8 @@ def logout():
 @app.route("/twlogin")
 @login_required
 def twlogin():
+    if current_user.twitter_api.first():
+        return "Already an api connected."
     auth = tweepy.OAuthHandler(twitter_credentials.consumer_key, twitter_credentials.consumer_secret_key, "https://cyberplanificateur.flifloo.fr/twlogin")
     if request.args.get("oauth_token") and request.args.get("oauth_verifier"):
         auth.request_token = {"oauth_token" : request.args.get("oauth_token"), "oauth_token_secret" : request.args.get("oauth_verifier")}
@@ -54,8 +51,7 @@ def twlogin():
         except:
             return "Error ! Failed to get access token"
         else:
-            twapi = TwitterAPI(access_token = auth.access_token, access_token_secret = auth.access_token_secret, user = current_user)
-            db.session.add(twapi)
+            db.session.add(TwitterAPI(access_token = auth.access_token, access_token_secret = auth.access_token_secret, user = current_user))
             db.session.commit()
     elif not TwitterAPI.query.filter_by(user=current_user).first():
         return redirect(auth.get_authorization_url())
@@ -73,6 +69,8 @@ def twlogout():
 @app.route("/trlogin")
 @login_required
 def trlogin():
+    if current_user.twitter_api.first():
+        return "Already an api connected."
     return redirect(f"https://trello.com/1/authorize?expiration=never&name=Cyberplanificateur&scope=read,write&response_type=token&key={trello_credentials.api_key}&return_url=https://cyberplanificateur.flifloo.fr/settings")
 
 @app.route("/trlogout")
@@ -91,74 +89,80 @@ def home():
 @app.route("/settings", methods = ["POST", "GET"])
 @login_required
 def settings():
-    trloginfail = False
-    if "trtoken" in request.form:
-        try:
-            trello.TrelloClient(api_key = trello_credentials.api_key, token = request.form["trtoken"]).list_boards()
-        except:
-            trloginfail = True
-        else:
-            trapi = TrelloAPI(token = request.form["trtoken"], user = current_user)
-            db.session.add(trapi)
-            db.session.commit()
-    return render_template("settings.html", twlogin = TwitterAPI.query.filter_by(user=current_user).first(), trlogin = TrelloAPI.query.filter_by(user=current_user).first(), trloginfail = trloginfail)
+    form = TrelloAPIForm()
+    if form.validate_on_submit():
+        if current_user.trello_api.first():
+            return "Already an api connected."
+        db.session.add(TrelloAPI(token = form.token.data, user = current_user))
+        db.session.commit()
+    return render_template("settings.html", form = form)
 
 @app.route("/dashboard", methods = ["POST", "GET"])
+@login_required
 def dashboard():
-    if not tw.is_login(session):
-        return redirect("/")
-
-    twapi = tw.api_login(session)
-    if request.args.get("twrm"):
-        database.twrm(request.args.get("twrm"))
-        if request.args.get("delet"):
-            twapi.destroy_status(request.args.get["twrm"])
-    elif "tweet" in request.form and "slots" in request.form and "keywords" in request.form:
-        try:
-            slots = int(request.form["slots"])
-            tweet = int(request.form["tweet"])
-        except:
-            formerror = True
-        else:
-            database.twadd(twapi.me().id, tweet, slots, str(request.form["keywords"].split(",")))
-            formerror = False
-
+    twapi = current_user.twitter_api.first()
+    trapi = current_user.trello_api.first()
     tweets = list()
-    idtake = list()
-    for t in database.twlist(twapi.me().id):
-        tw = twapi.get_status(t["id"])
-        keywords = "|"
-        for te in eval(t["keywords"]):
-            keywords += f" {te} |"
-        tweets.append({"text": tw.text, "id": tw.id, "slots": f"{t['slots']}/{t['maxslots']}", "keywords": keywords})
-        idtake.append(tw.id)
-
     timeline = list()
-    for t in twapi.user_timeline():
-        if not t.in_reply_to_status_id and not t.retweeted and t.id not in idtake:
-            timeline.append({"text": t.text, "id": t.id})
+    boards = list()
+    columns = list()
 
-    if tr.is_login(session):
-        trapi = trello.TrelloClient(api_key = trello_credentials.api_key, token = database.trtoken(twapi.me().id))
-        boards = list()
+    if twapi:
+        twapi = twapi.api_login()
+
+        if request.args.get("twrm"):
+            db.session.delete(Tweets.query.filter_by(user = current_user, statu_id = request.args.get("twrm")).first())
+            db.session.commit()
+            if request.args.get("delet"):
+                twapi.destroy_status(request.args.get["twrm"])
+        elif "tweet" in request.form and "slots" in request.form and "keywords" in request.form:
+            try:
+                slots = int(request.form["slots"])
+                tweet = int(request.form["tweet"])
+            except:
+                formerror = True
+            else:
+                db.session.add(Tweets(user = current_user, statu_id = tweet, slots = 0, slots_max = slots, keywords = str(request.form["keywords"].split(","))))
+                db.session.commit()
+        elif "board" in request.form:
+            db.session.add(Boards(user = current_user, board_id = request.form["board"]))
+            db.session.commit()
+        elif "column" in request.form:
+            current_user.boards.first().column_id = request.form["column"]
+            db.session.commit()
+
+        for t in Tweets.query.filter_by(user = current_user):
+            statu = twapi.get_status(t.statu_id)
+            keywords = "|"
+            for text in eval(t.keywords):
+                keywords += f" {text} |"
+            tweets.append({"text": statu.text, "id": t.statu_id, "slots": f"{t.slots}/{t.slots_max}", "keywords": keywords})
+
+        for t in twapi.user_timeline():
+            if not t.in_reply_to_status_id and not t.retweeted and not Tweets.query.filter_by(user = current_user, statu_id = t.id).first():
+                timeline.append({"text": t.text, "id": t.id})
+
+
+    if trapi:
+        trapi = trapi.api_login()
         for b in trapi.list_boards():
-            boards.append(b.name)
+            select = False
+            if b.id == current_user.boards.first().board_id:
+                select = True
+            boards.append({"text": b.name, "id": b.id, "select": select})
 
+        if current_user.boards.first() and current_user.boards.first().board_id:
+            for c in trapi.get_board(current_user.boards.first().board_id).list_lists():
+                select = False
+                if c.id == current_user.boards.first().column_id:
+                    select = True
+                columns.append({"text": c.name, "id": c.id, "select": select})
 
-    return render_template("dashboard.html", login = True, tweets = tweets, timeline = timeline, boards = boards, columns = None)
+    return render_template("dashboard.html", timeline = timeline, tweets = tweets, boards = boards, columns = columns)
 
 @app.route("/twtoken")
 def twtoken():
     return f"{session['access_token']} -- {session['access_secret_token']}"
-
-@app.route("/twpost")
-def twpost():
-    if tw.is_login(session):
-        api = twapi_login(session)
-        api.update_status("bloup")
-        return "Send !"
-    else:
-        return "Not login !"
 
 @app.route("/test")
 def test():

@@ -12,7 +12,7 @@
 
 				<h3>Connexions</h3>
 				<p>Twitter :
-				{% if twlogin %}
+				{% if current_user.twitter_api.first() %}
 				<font color="green">Connected</font></p>
 				<a href="{{ url_for('twlogout') }}" class="button">Disconnect</a>
 				{% else %}
@@ -20,15 +20,22 @@
 				<a href="{{ url_for('twlogin') }}" class="button primary">Connect</a>
 				{% endif %}
 				<p>Trello :
-				{% if trlogin %}
+				{% if current_user.trello_api.first() %}
 				<font color="green">Connected</font></p>
 				<a href="{{ url_for('trlogout') }}" class="button">Disconnect</a>
 				{% else %}
 				<font color="red">Disconnected</font></p>
 				<p><a href="{{ url_for('trlogin') }}">Click here</a> and give the token bellow</p>
-				<form action = "https://cyberplanificateur.flifloo.fr/settings" method = "POST">
-					<input type="text" name="trtoken" placeholder="Trello token" />
-					<input type="submit" value="Connect" class="button primary">
+				<form action = "" method = "POST" novalidate>
+					{{ form.hidden_tag() }}
+					<p>
+						{{ form.token.label }}
+						{{ form.token(size=64) }}
+						{% for error in form.token.errors %}
+						<span style="color: red;">[{{ error }}]</span>
+						{% endfor %}
+					</p>
+					<p>{{ form.submit() }}</p>
 				</form>
 				{% endif %}
 
