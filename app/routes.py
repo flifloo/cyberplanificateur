@@ -69,7 +69,7 @@ def twlogout():
 @app.route("/trlogin")
 @login_required
 def trlogin():
-    if current_user.twitter_api.first():
+    if current_user.trello_api.first():
         return "Already an api connected."
     return redirect(f"https://trello.com/1/authorize?expiration=never&name=Cyberplanificateur&scope=read,write&response_type=token&key={trello_credentials.api_key}&return_url=https://cyberplanificateur.flifloo.fr/settings")
 
@@ -138,8 +138,10 @@ def dashboard():
                 keywords += f" {text} |"
             tweets.append({"text": statu.text, "id": t.statu_id, "slots": f"{t.slots}/{t.slots_max}", "keywords": keywords})
 
-        for t in twapi.user_timeline():
+        for t in twapi.user_timeline(count = 200):
             if not t.in_reply_to_status_id and not t.retweeted and not Tweets.query.filter_by(user = current_user, statu_id = t.id).first():
+                if len(timeline) >= 5:
+                    break
                 timeline.append({"text": t.text, "id": t.id})
 
 
@@ -147,7 +149,7 @@ def dashboard():
         trapi = trapi.api_login()
         for b in trapi.list_boards():
             select = False
-            if b.id == current_user.boards.first().board_id:
+            if current_user.boards.first() and b.id == current_user.boards.first().board_id:
                 select = True
             boards.append({"text": b.name, "id": b.id, "select": select})
 
