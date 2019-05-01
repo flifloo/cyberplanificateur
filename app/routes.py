@@ -118,6 +118,7 @@ def dashboard():
             db.session.commit()
             if request.args.get("delet"):
                 twapi.destroy_status(request.args.get["twrm"])
+            return redirect(url_for("dashboard"))
         elif "tweet" in request.form and "slots" in request.form and "keywords" in request.form:
             try:
                 slots = int(request.form["slots"])
@@ -127,12 +128,7 @@ def dashboard():
             else:
                 db.session.add(Tweets(user = current_user, statu_id = tweet, slots = 0, slots_max = slots, keywords = str(request.form["keywords"].split(","))))
                 db.session.commit()
-        elif "board" in request.form:
-            db.session.add(Boards(user = current_user, board_id = request.form["board"]))
-            db.session.commit()
-        elif "column" in request.form:
-            current_user.boards.first().column_id = request.form["column"]
-            db.session.commit()
+            return redirect(url_for("dashboard"))
 
         for t in Tweets.query.filter_by(user = current_user):
             statu = twapi.get_status(t.statu_id)
@@ -150,6 +146,16 @@ def dashboard():
 
     if trapi:
         trapi = trapi.api_login()
+
+        if "board" in request.form:
+            db.session.add(Boards(user = current_user, board_id = request.form["board"]))
+            db.session.commit()
+            return redirect(url_for("dashboard"))
+        elif "column" in request.form:
+            current_user.boards.first().column_id = request.form["column"]
+            db.session.commit()
+            return redirect(url_for("dashboard"))
+
         for b in trapi.list_boards():
             select = False
             if current_user.boards.first() and b.id == current_user.boards.first().board_id:
