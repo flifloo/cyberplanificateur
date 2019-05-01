@@ -16,7 +16,7 @@ class listener(tweepy.streaming.StreamListener):
         print(data)
         all_data = json.loads(data)
         for t in user.tweets.all():
-            if "in_reply_to_status_id" in all_data and all_data["in_reply_to_status_id"] and t.statu_id == int(all_data["in_reply_to_status_id"]) and t.slots != t.slots_max and not t.commissions.filter_by(user = all_data["user"]["screen_name"]).first(): #and api.me().id != int(all_data["user"]["id"])
+            if "in_reply_to_status_id" in all_data and all_data["in_reply_to_status_id"] and t.statu_id == int(all_data["in_reply_to_status_id"]) and t.slots != t.slots_max and not t.commissions.filter_by(user = all_data["user"]["screen_name"]).first() and api.me().id != int(all_data["user"]["id"]):
                 for w in eval(t.keywords.lower()):
                     if all_data["text"].lower().find(w) != -1:
                         t.slots += 1
