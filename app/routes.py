@@ -4,7 +4,8 @@ from flask_login import current_user, login_user, logout_user, login_required
 from app.forms import LoginForm, RegistrationForm, TrelloAPIForm
 from app.models import User, TwitterAPI, Tweets, TrelloAPI, Boards
 from werkzeug.urls import url_parse
-import tweepy, trello, twitter_credentials, trello_credentials
+from config import basedir
+import tweepy, trello, twitter_credentials, trello_credentials, subprocess
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -128,6 +129,8 @@ def dashboard():
             else:
                 db.session.add(Tweets(user = current_user, statu_id = tweet, slots = 0, slots_max = slots, keywords = str(request.form["keywords"].split(","))))
                 db.session.commit()
+            if str(subprocess.check_output(["screen", "-list"])).find(f"stream-{str(current_user.id)}") == -1:
+                subprocess.check_call(["screen", "-S", f"stream-{str(current_user.id)}", "-d", "-m", "python3.7", "stream.py", str(current_user.id)], cwd = basedir)
             return redirect(url_for("dashboard"))
 
         for t in Tweets.query.filter_by(user = current_user):
