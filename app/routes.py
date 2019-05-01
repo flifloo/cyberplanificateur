@@ -111,7 +111,10 @@ def dashboard():
         twapi = twapi.api_login()
 
         if request.args.get("twrm"):
-            db.session.delete(Tweets.query.filter_by(user = current_user, statu_id = request.args.get("twrm")).first())
+            t = Tweets.query.filter_by(user = current_user, statu_id = request.args.get("twrm")).first()
+            for c in t.commissions.all():
+                db.session.delete(c)
+            db.session.delete(t)
             db.session.commit()
             if request.args.get("delet"):
                 twapi.destroy_status(request.args.get["twrm"])

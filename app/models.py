@@ -41,6 +41,12 @@ class Tweets(db.Model):
     slots = db.Column(db.Integer)
     slots_max = db.Column(db.Integer)
     keywords = db.Column(db.String(256))
+    commissions = db.relationship("Commission", backref="tweet", lazy="dynamic")
+
+class Commission(db.Model):
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    tweet_id = db.Column(db.Integer, db.ForeignKey("tweets.id"))
+    user = db.Column(db.String(15))
 
 class TrelloAPI(db.Model):
     id = db.Column(db.Integer, primary_key=True, unique=True)
