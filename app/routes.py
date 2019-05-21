@@ -118,7 +118,7 @@ def dashboard():
             db.session.delete(t)
             db.session.commit()
             if request.args.get("delet"):
-                twapi.destroy_status(request.args.get["twrm"])
+                twapi.destroy_status(request.args.get("twrm"))
             return redirect(url_for("dashboard"))
         elif "tweet" in request.form and "slots" in request.form and "keywords" in request.form:
             try:
@@ -129,7 +129,7 @@ def dashboard():
             else:
                 db.session.add(Tweets(user = current_user, statu_id = tweet, slots = 0, slots_max = slots, keywords = str(request.form["keywords"].split(","))))
                 db.session.commit()
-            if str(subprocess.check_output(["screen", "-list"])).find(f"stream-{str(current_user.id)}") == -1:
+            if str(subprocess.check_output(["screen -list; exit 0"], stderr=subprocess.STDOUT, shell=True)).find(f"stream-{str(current_user.id)}") == -1:
                 subprocess.check_call(["screen", "-S", f"stream-{str(current_user.id)}", "-d", "-m", "python3.7", "stream.py", str(current_user.id)], cwd = basedir)
             return redirect(url_for("dashboard"))
 
